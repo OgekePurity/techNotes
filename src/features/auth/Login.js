@@ -1,44 +1,47 @@
-import { useRef, useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
-import { setCredentials } from './authSlice'
-import { useLoginMutation } from './authApiSlice'
-import usePersist from '../../hooks/usePersist'
-import useTitle from '../../hooks/useTitle'
-import PulseLoader from 'react-spinners/PulseLoader'
+import { useRef, useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from './authSlice';
+import { useLoginMutation } from './authApiSlice';
+import usePersist from '../../hooks/usePersist';
+import useTitle from '../../hooks/useTitle';
+import PulseLoader from 'react-spinners/PulseLoader';
 
 const Login = () => {
-    useTitle('Employee Login')
+    useTitle('Employee Login');
 
-    const userRef = useRef()
-    const errRef = useRef()
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-    const [errMsg, setErrMsg] = useState('')
-    const [persist, setPersist] = usePersist()
+    const userRef = useRef(null); // Initialize with null
+    const errRef = useRef();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [errMsg, setErrMsg] = useState('');
+    const [persist, setPersist] = usePersist();
 
-    const navigate = useNavigate()
-    const dispatch = useDispatch()
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const [login, { isLoading }] = useLoginMutation()
-
-    useEffect(() => {
-        userRef.current.focus()
-    }, [])
+    const [login, { isLoading }] = useLoginMutation();
 
     useEffect(() => {
+        // Focus on the username input field when component mounts
+        if (userRef.current) {
+            userRef.current.focus();
+        }
+    }, []); // Empty dependency array ensures it runs only once on mount
+
+    useEffect(() => {
+        // Clear error message when username or password changes
         setErrMsg('');
-    }, [username, password])
-
+    }, [username, password]);
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         try {
-            const { accessToken } = await login({ username, password }).unwrap()
-            dispatch(setCredentials({ accessToken }))
-            setUsername('')
-            setPassword('')
-            navigate('/dash')
+            const { accessToken } = await login({ username, password }).unwrap();
+            dispatch(setCredentials({ accessToken }));
+            setUsername('');
+            setPassword('');
+            navigate('/dash');
         } catch (err) {
             if (!err.status) {
                 setErrMsg('No Server Response');
@@ -49,25 +52,29 @@ const Login = () => {
             } else {
                 setErrMsg(err.data?.message);
             }
-            errRef.current.focus();
+            if (errRef.current) {
+                errRef.current.focus(); // Focus on error message if available
+            }
         }
-    }
+    };
 
-    const handleUserInput = (e) => setUsername(e.target.value)
-    const handlePwdInput = (e) => setPassword(e.target.value)
-    const handleToggle = () => setPersist(prev => !prev)
+    const handleUserInput = (e) => setUsername(e.target.value);
+    const handlePwdInput = (e) => setPassword(e.target.value);
+    const handleToggle = () => setPersist((prev) => !prev);
 
-    const errClass = errMsg ? "errmsg" : "offscreen"
+    const errClass = errMsg ? 'errmsg' : 'offscreen';
 
-    if (isLoading) return <PulseLoader color={"#FFF"} />
+    if (isLoading) return <PulseLoader color={"#FFF"} />;
 
-    const content = (
+    return (
         <section className="public">
             <header>
                 <h1>Employee Login</h1>
             </header>
             <main className="login">
-                <p ref={errRef} className={errClass} aria-live="assertive">{errMsg}</p>
+                <p ref={errRef} className={errClass} aria-live="assertive">
+                    {errMsg}
+                </p>
 
                 <form className="form" onSubmit={handleSubmit}>
                     <label htmlFor="username">Username:</label>
@@ -93,7 +100,6 @@ const Login = () => {
                     />
                     <button className="form__submit-button">Sign In</button>
 
-
                     <label htmlFor="persist" className="form__persist">
                         <input
                             type="checkbox"
@@ -110,8 +116,7 @@ const Login = () => {
                 <Link to="/">Back to Home</Link>
             </footer>
         </section>
-    )
+    );
+};
 
-    return content
-}
-export default Login
+export default Login;
